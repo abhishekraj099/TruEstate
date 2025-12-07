@@ -4,7 +4,6 @@ import { loadSalesData } from '../utils/dataLoader.js';
 
 const router = express.Router();
 
-// Load data on startup
 loadSalesData().catch(err => console.error('Error loading data:', err));
 
 router.get('/', getSales);

@@ -4,77 +4,95 @@ A full-stack sales management system with advanced search, filtering, sorting, a
 
 ## Overview
 
-This application provides a comprehensive interface for viewing and analyzing sales transactions with real-time filtering, multi-criteria search, and efficient data pagination. Built with React frontend and Node.js backend to handle large-scale sales data efficiently.
+This application provides a comprehensive interface for viewing and analyzing sales transactions with real-time filtering, multi-criteria search, and efficient data pagination. It uses a React + Vite frontend and a Node.js + Express backend that operate on a CSV-based sample dataset loaded into memory.
 
 ## Tech Stack
 
 **Frontend:**
-- React.js (v19.2.1)
-- Vite (Build tool)
+- React.js
+- Vite (build tool + dev server)
 - Axios (API calls)
-- CSS3 (Styling)
+- CSS3 (styling)
 
 **Backend:**
 - Node.js
 - Express.js
-- CSV-parser (Data processing)
-- CORS & Dotenv
+- csv-parser (data processing)
+- CORS & dotenv
 
 ## Search Implementation
 
-The search functionality performs case-insensitive matching across Customer Name and Phone Number fields. It works seamlessly with active filters and sorting, updating results in real-time as users type. Empty searches reset to show all filtered results.
+The search functionality performs case-insensitive matching across Customer Name and Phone Number fields. It works together with active filters and sorting, and when the search box is cleared, results fall back to the current filtered dataset.
 
 ## Filter Implementation
 
-Multi-select filters support:
-- Customer Region (dropdown selection)
-- Gender (dropdown selection)
-- Product Category (dropdown selection)
-- Payment Method (dropdown selection)
-- Age Range (min-max numeric input)
-- Date Range (start-end date picker)
+Multi-criteria filters support:
+- Customer Region (dropdown)
+- Gender (dropdown)
+- Product Category (dropdown)
+- Payment Method (dropdown)
+- Age Range (min–max numeric inputs)
+- Date Range (start–end date picker)
 
-All filters work independently and in combination. Filter state is preserved during search and sort operations.
+All filters can be combined, and their state is preserved when changing search or sort options.
 
 ## Sorting Implementation
 
-Three sorting options available:
-- **Date (Newest First)**: Sorts transactions by date in descending order
-- **Quantity**: Sorts by quantity in descending order
-- **Customer Name (A-Z)**: Alphabetical sorting by customer name
+Available sorting options:
+- **Date (Newest First)** – date descending
+- **Quantity** – quantity descending
+- **Customer Name (A–Z)** – alphabetical by customer name
 
-Sorting maintains active search queries and filter selections.
+Sorting respects the current search query and filters.
 
 ## Pagination Implementation
 
-Server-side pagination with 10 items per page. Features:
-- Previous/Next navigation buttons
-- Current page indicator
-- Total pages display
-- Pagination state preserved across filter, search, and sort operations
-- Disabled buttons at boundaries (first/last page)
+Server-side pagination with 10 items per page:
+- Previous/Next navigation
+- Current page and total pages display
+- Pagination state preserved when changing filters/search/sort
+- Boundary buttons disabled on first/last page
 
 ## Setup Instructions
 
 ### Prerequisites
+
 - Node.js (v18 or higher)
 - npm
 
 ### Backend Setup
 
+cd backend
+npm install
+node scripts/generateSample.js # generate sample sales_data.csv (5K rows)
+npm run dev # runs at http://localhost:5000
 
-Backend runs on `http://localhost:5000`
 
 ### Frontend Setup
 
-Frontend runs on `http://localhost:3000`
+Create `.env` inside `frontend`:
 
-### Full Application
-1. Start backend first (port 5000)
-2. Start frontend (port 3000)
-3. Open browser to `http://localhost:3000`
+
+VITE_API_URL=http://localhost:5000/api
+
+
+
+Then:
+
+cd frontend
+npm install
+npm run dev # runs at http://localhost:5173
+
+
+### Full Application (Local)
+
+1. Start the backend on port 5000.
+2. Start the frontend on port 5173.
+3. Open `http://localhost:5173` in the browser.
 
 ## Project Structure
+
+
 truestate-sales-system/
 ├── backend/
 │ ├── src/
@@ -83,17 +101,25 @@ truestate-sales-system/
 │ │ ├── routes/
 │ │ ├── utils/
 │ │ └── index.js
-│ └── data/
+│ ├── data/
+│ │ └── sales_data.csv
+│ └── scripts/
+│ └── generateSample.js
 ├── frontend/
 │ ├── src/
 │ │ ├── components/
 │ │ ├── services/
 │ │ ├── styles/
-│ │ └── App.jsx
-│ └── index.html
+│ │ ├── App.jsx
+│ │ └── main.jsx
+│ ├── index.html
+│ └── vite.config.js
 └── docs/
+└── architecture.md
+
 
 
 ## Live Demo
-- Frontend: [Your Vercel URL]
-- Backend API: [Your Railway/Render URL]
+
+- Frontend: `https://truestate-frontend.vercel.app`
+- Backend API: `https://truestate-backend.vercel.app/api/sales`

@@ -4,7 +4,6 @@ export const searchAndFilterSales = (query) => {
   let data = getSalesData();
   const { search, page = 1, limit = 10, sortBy, ...filters } = query;
 
-  // SEARCH - Customer Name or Phone Number
   if (search) {
     const searchLower = search.toLowerCase();
     data = data.filter(item => 
@@ -13,7 +12,6 @@ export const searchAndFilterSales = (query) => {
     );
   }
 
-  // FILTERS - Multi-select
   if (filters.region) {
     const regions = Array.isArray(filters.region) ? filters.region : [filters.region];
     data = data.filter(item => regions.includes(item['Customer Region']));
@@ -52,16 +50,14 @@ export const searchAndFilterSales = (query) => {
     });
   }
 
-  // SORTING
   if (sortBy === 'date') {
     data.sort((a, b) => new Date(b['Date']) - new Date(a['Date']));
   } else if (sortBy === 'quantity') {
-    data.sort((a, b) => parseInt(b['Quantity']) - parseInt(a['Quantity']));
+    data.sort((a,  b) => parseInt(b['Quantity']) - parseInt(a['Quantity']));
   } else if (sortBy === 'name') {
     data.sort((a, b) => a['Customer Name']?.localeCompare(b['Customer Name']));
   }
 
-  // PAGINATION
   const totalItems = data.length;
   const totalPages = Math.ceil(totalItems / limit);
   const startIndex = (page - 1) * limit;

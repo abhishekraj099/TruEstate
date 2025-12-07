@@ -32,7 +32,6 @@ body {
   min-height: calc(100vh - 80px);
 }
 
-/* Sidebar */
 .sidebar {
   width: 280px;
   background: white;
@@ -41,7 +40,6 @@ body {
   overflow-y: auto;
 }
 
-/* Filter Panel */
 .filter-panel {
   display: flex;
   flex-direction: column;
@@ -104,7 +102,6 @@ body {
   flex: 1;
 }
 
-/* Main Content */
 .main-content {
   flex: 1;
   padding: 2rem;
@@ -118,7 +115,6 @@ body {
   align-items: center;
 }
 
-/* Search Bar */
 .search-bar {
   display: flex;
   flex: 1;
@@ -147,7 +143,6 @@ body {
   background: #5568d3;
 }
 
-/* Sort Dropdown */
 .sort-dropdown {
   display: flex;
   align-items: center;
@@ -167,14 +162,12 @@ body {
   cursor: pointer;
 }
 
-/* Results Info */
 .results-info {
   margin-bottom: 1rem;
   color: #666;
   font-size: 0.95rem;
 }
 
-/* Table */
 .table-container {
   background: white;
   border-radius: 8px;
@@ -234,7 +227,6 @@ body {
   color: #721c24;
 }
 
-/* Pagination */
 .pagination {
   display: flex;
   justify-content: center;
@@ -267,7 +259,6 @@ body {
   color: #555;
 }
 
-/* Loading & No Results */
 .loading, .no-results {
   text-align: center;
   padding: 3rem;
@@ -275,7 +266,6 @@ body {
   font-size: 1.1rem;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .app-container {
     flex-direction: column;

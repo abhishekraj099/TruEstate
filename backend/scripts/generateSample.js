@@ -10,11 +10,46 @@ const genders = ['Male', 'Female'];
 const categories = ['Electronics', 'Clothing', 'Beauty', 'Sports', 'Home'];
 const payments = ['Credit Card', 'Debit Card', 'Cash', 'UPI'];
 const statuses = ['Completed', 'Pending', 'Cancelled'];
-const names = ['John Doe', 'Jane Smith', 'Mike Johnson', 'Sarah Williams', 'David Brown', 'Emily Davis', 'Chris Wilson', 'Lisa Anderson'];
+const names = [
+  'John Doe',
+  'Jane Smith',
+  'Mike Johnson',
+  'Sarah Williams',
+  'David Brown',
+  'Emily Davis',
+  'Chris Wilson',
+  'Lisa Anderson'
+];
 
-console.log('🔨 Generating sample data...');
+console.log('Generating sample data...');
 
-const data = [['Customer ID', 'Customer Name', 'Phone Number', 'Gender', 'Age', 'Customer Region', 'Customer Type', 'Product ID', 'Product Name', 'Brand', 'Product Category', 'Tags', 'Quantity', 'Price per Unit', 'Discount Percentage', 'Total Amount', 'Final Amount', 'Date', 'Payment Method', 'Order Status', 'Delivery Type', 'Store ID', 'Store Location', 'Salesperson ID', 'Employee Name']];
+const data = [[
+  'Customer ID',
+  'Customer Name',
+  'Phone Number',
+  'Gender',
+  'Age',
+  'Customer Region',
+  'Customer Type',
+  'Product ID',
+  'Product Name',
+  'Brand',
+  'Product Category',
+  'Tags',
+  'Quantity',
+  'Price per Unit',
+  'Discount Percentage',
+  'Total Amount',
+  'Final Amount',
+  'Date',
+  'Payment Method',
+  'Order Status',
+  'Delivery Type',
+  'Store ID',
+  'Store Location',
+  'Salesperson ID',
+  'Employee Name'
+]];
 
 for (let i = 1; i <= 5000; i++) {
   const qty = Math.floor(Math.random() * 10) + 1;
@@ -34,7 +69,7 @@ for (let i = 1; i <= 5000; i++) {
     region,
     Math.random() > 0.5 ? 'Regular' : 'Premium',
     `PROD${String(i).padStart(6, '0')}`,
-    category + ' Product',
+    `${category} Product`,
     'Brand' + (Math.floor(Math.random() * 5) + 1),
     category,
     category,
@@ -57,5 +92,6 @@ for (let i = 1; i <= 5000; i++) {
 const csv = data.map(row => row.join(',')).join('\n');
 const dataPath = path.join(__dirname, '../data/sales_data.csv');
 fs.writeFileSync(dataPath, csv);
-console.log(`✅ Generated ${data.length - 1} sample records`);
-console.log(`📁 File saved to: ${dataPath}`);
+
+console.log(`Generated ${data.length - 1} sample records`);
+console.log(`File saved to: ${dataPath}`);
