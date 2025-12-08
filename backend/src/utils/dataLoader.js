@@ -1,31 +1,105 @@
 import fs from 'fs';
-import path from 'path';
 import csv from 'csv-parser';
-import { fileURLToPath } from 'url';
+import Sales from '../models/Sales.js';
+import connectDB from '../config/db.config.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const BATCH_SIZE = 1000;
 
-let salesData = [];
-const CSV_PATH = path.join(__dirname, '../../data/sales_data.csv');
+export const loadCSVToDatabase = async (csvFilePath) => {
+  try {
+    // Connect to database
+    await connectDB();
 
-export const loadSalesData = () => {
-  return new Promise((resolve, reject) => {
-    console.log('📊 Loading sales data from CSV...');
-    
-    if (!fs.existsSync(CSV_PATH)) {
-      return reject(new Error('CSV file not found. Run build script first.'));
+    // Check if file exists
+    if (!fs.existsSync(csvFilePath)) {
+      throw new Error(`❌ CSV file not found at: ${csvFilePath}`);
     }
-    
-    fs.createReadStream(CSV_PATH)
-      .pipe(csv())
-      .on('data', (row) => salesData.push(row))
-      .on('end', () => {
-        console.log(`✅ Loaded ${salesData.length} records`);
-        resolve(salesData);
-      })
-      .on('error', reject);
-  });
-};
 
-export const getSalesData = () => salesData;
+    // Check if data already exists
+    const existingCount = await Sales.countDocuments();
+    if (existingCount > 0) {
+      console.log(`⚠️  Found ${existingCount} existing records.`);
+      console.log('🗑️  Clearing old data...');
+      await Sales.deleteMany({});
+      console.log('✅ Old data cleared.\n');
+    }
+
+    let batch = [];
+    let totalImported = 0;
+    let errorCount = 0;
+
+    return new Promise((resolve, reject) => {
+      fs.createReadStream(csvFilePath)
+        .pipe(csv())
+        .on('data', async (row) => {
+          try {
+            batch.push({
+              customerId: row['Customer ID'],
+              customerName: row['Customer Name'],
+              phoneNumber: row['Phone Number'],
+              gender: row['Gender'],
+              age: parseInt(row['Age']) || 0,
+              customerRegion: row['Customer Region'],
+              customerType: row['Customer Type'],
+              productId: row['Product ID'],
+              productName: row['Product Name'],
+              brand: row['Brand'],
+              productCategory: row['Product Category'],
+              tags: row['Tags'],
+              quantity: parseInt(row['Quantity']) || 0,
+              pricePerUnit: parseFloat(row['Price per Unit']) || 0,
+              discountPercentage: parseFloat(row['Discount Percentage']) || 0,
+              totalAmount: parseFloat(row['Total Amount']) || 0,
+              finalAmount: parseFloat(row['Final Amount']) || 0,
+              date: new Date(row['Date']),
+              paymentMethod: row['Payment Method'],
+              orderStatus: row['Order Status'],
+              deliveryType: row['Delivery Type'],
+              storeId: row['Store ID'],
+              storeLocation: row['Store Location'],
+              salespersonId: row['Salesperson ID'],
+              employeeName: row['Employee Name']
+            });
+
+            // Insert in batches
+            if (batch.length >= BATCH_SIZE) {
+              try {
+                await Sales.insertMany(batch);
+                totalImported += batch.length;
+                console.log(`✅ Imported ${totalImported} records...`);
+                batch = [];
+              } catch (err) {
+                console.error('❌ Batch insert error:', err.message);
+                errorCount++;
+                batch = [];
+              }
+            }
+          } catch (err) {
+            errorCount++;
+          }
+        })
+        .on('end', async () => {
+          try {
+            // Insert remaining records
+            if (batch.length > 0) {
+              await Sales.insertMany(batch);
+              totalImported += batch.length;
+            }
+            
+            if (errorCount > 0) {
+              console.log(`⚠️  Errors encountered: ${errorCount}`);
+            }
+            
+            resolve(totalImported);
+          } catch (err) {
+            reject(err);
+          }
+        })
+        .on('error', (error) => {
+          reject(error);
+        });
+    });
+  } catch (error) {
+    throw error;
+  }
+};

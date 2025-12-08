@@ -14,7 +14,8 @@ export const getSalesData = async (params) => {
 
 export const getFilterOptions = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/sales/filters`);
+    // backend route is /api/filters, not /api/sales/filters
+    const response = await axios.get(`${API_BASE_URL}/filters`);
     return response.data;
   } catch (error) {
     console.error('Error fetching filter options:', error);

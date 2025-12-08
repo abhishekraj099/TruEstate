@@ -25,3 +25,7 @@ Thumbs.db
 # Temp files
 *.tmp
 *.temp
+
+# Backend data files (large CSV, not in Git)
+backend/data/*.csv
+*.csv

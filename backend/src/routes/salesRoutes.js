@@ -1,12 +1,19 @@
 import express from 'express';
-import { getSales, getFilters } from '../controllers/salesController.js';
-import { loadSalesData } from '../utils/dataLoader.js';
+import { 
+  getSales, 
+  getFilters, 
+  getAnalytics, 
+  getCategoryAnalytics 
+} from '../controllers/salesController.js';
 
 const router = express.Router();
 
-loadSalesData().catch(err => console.error('Error loading data:', err));
-
-router.get('/', getSales);
+// Main routes
+router.get('/sales', getSales);
 router.get('/filters', getFilters);
+
+// Analytics routes
+router.get('/analytics/region', getAnalytics);
+router.get('/analytics/category', getCategoryAnalytics);
 
 export default router;
