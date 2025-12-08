@@ -11,62 +11,70 @@ export const searchAndFilterSales = async (query) => {
     // Build MongoDB query
     const dbQuery = {};
 
-    // Search functionality
+    // Search functionality (works only if you later migrate to camelCase fields)
     if (search) {
       dbQuery.$or = [
         { customerName: { $regex: search, $options: 'i' } },
-        { phoneNumber: { $regex: search, $options: 'i' } }
+        { phoneNumber: { $regex: search, $options: 'i' } },
       ];
     }
 
     // Region filter
     if (filters.region) {
-      const regions = Array.isArray(filters.region) ? filters.region : [filters.region];
-      dbQuery.customerRegion = { $in: regions };
+      const regions = Array.isArray(filters.region)
+        ? filters.region
+        : [filters.region];
+      dbQuery['Customer Region'] = { $in: regions };
     }
 
     // Gender filter
     if (filters.gender) {
-      const genders = Array.isArray(filters.gender) ? filters.gender : [filters.gender];
-      dbQuery.gender = { $in: genders };
+      const genders = Array.isArray(filters.gender)
+        ? filters.gender
+        : [filters.gender];
+      dbQuery['Gender'] = { $in: genders };
     }
 
     // Category filter
     if (filters.category) {
-      const categories = Array.isArray(filters.category) ? filters.category : [filters.category];
-      dbQuery.productCategory = { $in: categories };
+      const categories = Array.isArray(filters.category)
+        ? filters.category
+        : [filters.category];
+      dbQuery['Product Category'] = { $in: categories };
     }
 
     // Payment method filter
     if (filters.paymentMethod) {
-      const methods = Array.isArray(filters.paymentMethod) ? filters.paymentMethod : [filters.paymentMethod];
-      dbQuery.paymentMethod = { $in: methods };
+      const methods = Array.isArray(filters.paymentMethod)
+        ? filters.paymentMethod
+        : [filters.paymentMethod];
+      dbQuery['Payment Method'] = { $in: methods };
     }
 
     // Age range filter
     if (filters.minAge || filters.maxAge) {
-      dbQuery.age = {};
-      if (filters.minAge) dbQuery.age.$gte = parseInt(filters.minAge);
-      if (filters.maxAge) dbQuery.age.$lte = parseInt(filters.maxAge);
+      dbQuery['Age'] = {};
+      if (filters.minAge) dbQuery['Age'].$gte = parseInt(filters.minAge);
+      if (filters.maxAge) dbQuery['Age'].$lte = parseInt(filters.maxAge);
     }
 
     // Date range filter
     if (filters.startDate || filters.endDate) {
-      dbQuery.date = {};
-      if (filters.startDate) dbQuery.date.$gte = new Date(filters.startDate);
-      if (filters.endDate) dbQuery.date.$lte = new Date(filters.endDate);
+      dbQuery['Date'] = {};
+      if (filters.startDate) dbQuery['Date'].$gte = new Date(filters.startDate);
+      if (filters.endDate) dbQuery['Date'].$lte = new Date(filters.endDate);
     }
 
-    // Build sort options
+    // Build sort options (on CSV field names)
     let sortOptions = {};
     if (sortBy === 'date') {
-      sortOptions = { date: -1 };
+      sortOptions = { Date: -1 };
     } else if (sortBy === 'quantity') {
-      sortOptions = { quantity: -1 };
+      sortOptions = { Quantity: -1 };
     } else if (sortBy === 'name') {
-      sortOptions = { customerName: 1 };
+      sortOptions = { 'Customer Name': 1 };
     } else {
-      sortOptions = { date: -1 }; // Default sort
+      sortOptions = { Date: -1 }; // Default sort
     }
 
     // Execute query with pagination
@@ -78,35 +86,35 @@ export const searchAndFilterSales = async (query) => {
       .sort(sortOptions)
       .skip(skip)
       .limit(parseInt(limit))
-      .lean(); // Convert to plain JavaScript objects
+      .lean();
 
-    // Transform data to match your frontend format
-    const transformedData = data.map(item => ({
-      'Customer ID': item.customerId,
-      'Customer Name': item.customerName,
-      'Phone Number': item.phoneNumber,
-      'Gender': item.gender,
-      'Age': item.age,
-      'Customer Region': item.customerRegion,
-      'Customer Type': item.customerType,
-      'Product ID': item.productId,
-      'Product Name': item.productName,
-      'Brand': item.brand,
-      'Product Category': item.productCategory,
-      'Tags': item.tags,
-      'Quantity': item.quantity,
-      'Price per Unit': item.pricePerUnit,
-      'Discount Percentage': item.discountPercentage,
-      'Total Amount': item.totalAmount,
-      'Final Amount': item.finalAmount,
-      'Date': item.date,
-      'Payment Method': item.paymentMethod,
-      'Order Status': item.orderStatus,
-      'Delivery Type': item.deliveryType,
-      'Store ID': item.storeId,
-      'Store Location': item.storeLocation,
-      'Salesperson ID': item.salespersonId,
-      'Employee Name': item.employeeName
+    // Just pass through the fields that already exist in MongoDB
+    const transformedData = data.map((item) => ({
+      'Customer ID': item['Customer ID'],
+      'Customer Name': item['Customer Name'],
+      'Phone Number': item['Phone Number'],
+      'Gender': item['Gender'],
+      'Age': item['Age'],
+      'Customer Region': item['Customer Region'],
+      'Customer Type': item['Customer Type'],
+      'Product ID': item['Product ID'],
+      'Product Name': item['Product Name'],
+      'Brand': item['Brand'],
+      'Product Category': item['Product Category'],
+      'Tags': item['Tags'],
+      'Quantity': item['Quantity'],
+      'Price per Unit': item['Price per Unit'],
+      'Discount Percentage': item['Discount Percentage'],
+      'Total Amount': item['Total Amount'],
+      'Final Amount': item['Final Amount'],
+      'Date': item['Date'],
+      'Payment Method': item['Payment Method'],
+      'Order Status': item['Order Status'],
+      'Delivery Type': item['Delivery Type'],
+      'Store ID': item['Store ID'],
+      'Store Location': item['Store Location'],
+      'Salesperson ID': item['Salesperson ID'],
+      'Employee Name': item['Employee Name'],
     }));
 
     return {
@@ -115,8 +123,8 @@ export const searchAndFilterSales = async (query) => {
         currentPage: parseInt(page),
         totalPages,
         totalItems,
-        itemsPerPage: parseInt(limit)
-      }
+        itemsPerPage: parseInt(limit),
+      },
     };
   } catch (error) {
     throw new Error(`Search and filter error: ${error.message}`);
@@ -125,18 +133,17 @@ export const searchAndFilterSales = async (query) => {
 
 export const getUniqueValues = async () => {
   try {
-    // Get distinct values from database
-    const [regions, genders, categories, paymentMethods, tags] = await Promise.all([
-      Sales.distinct('customerRegion'),
-      Sales.distinct('gender'),
-      Sales.distinct('productCategory'),
-      Sales.distinct('paymentMethod'),
-      Sales.distinct('tags')
-    ]);
+    const [regions, genders, categories, paymentMethods, tags] =
+      await Promise.all([
+        Sales.distinct('Customer Region'),
+        Sales.distinct('Gender'),
+        Sales.distinct('Product Category'),
+        Sales.distinct('Payment Method'),
+        Sales.distinct('Tags'),
+      ]);
 
-    // Process tags if they contain comma-separated values
     const uniqueTags = [...new Set(
-      tags.flatMap(tag => (tag ? tag.split(',').map(t => t.trim()) : []))
+      tags.flatMap((tag) => (tag ? tag.split(',').map((t) => t.trim()) : [])),
     )].filter(Boolean);
 
     return {
@@ -144,26 +151,25 @@ export const getUniqueValues = async () => {
       genders: genders.filter(Boolean).sort(),
       categories: categories.filter(Boolean).sort(),
       paymentMethods: paymentMethods.filter(Boolean).sort(),
-      tags: uniqueTags.sort()
+      tags: uniqueTags.sort(),
     };
   } catch (error) {
     throw new Error(`Get unique values error: ${error.message}`);
   }
 };
 
-// Additional analytics functions
 export const getSalesAnalytics = async () => {
   try {
     const analytics = await Sales.aggregate([
       {
         $group: {
-          _id: '$customerRegion',
-          totalRevenue: { $sum: '$finalAmount' },
+          _id: '$Customer Region',
+          totalRevenue: { $sum: '$Final Amount' },
           orderCount: { $sum: 1 },
-          avgOrderValue: { $avg: '$finalAmount' }
-        }
+          avgOrderValue: { $avg: '$Final Amount' },
+        },
       },
-      { $sort: { totalRevenue: -1 } }
+      { $sort: { totalRevenue: -1 } },
     ]);
 
     return analytics;
@@ -177,13 +183,13 @@ export const getCategoryStats = async () => {
     const categoryStats = await Sales.aggregate([
       {
         $group: {
-          _id: '$productCategory',
-          totalSales: { $sum: '$finalAmount' },
-          totalQuantity: { $sum: '$quantity' },
-          avgPrice: { $avg: '$pricePerUnit' }
-        }
+          _id: '$Product Category',
+          totalSales: { $sum: '$Final Amount' },
+          totalQuantity: { $sum: '$Quantity' },
+          avgPrice: { $avg: '$Price per Unit' },
+        },
       },
-      { $sort: { totalSales: -1 } }
+      { $sort: { totalSales: -1 } },
     ]);
 
     return categoryStats;

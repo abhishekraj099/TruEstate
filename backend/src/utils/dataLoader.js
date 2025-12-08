@@ -7,7 +7,7 @@ const BATCH_SIZE = 1000;
 
 export const loadCSVToDatabase = async (csvFilePath) => {
   try {
-    // Connect to database
+    // Connect to database (Atlas via MONGODB_URI)
     await connectDB();
 
     // Check if file exists
@@ -15,10 +15,10 @@ export const loadCSVToDatabase = async (csvFilePath) => {
       throw new Error(`❌ CSV file not found at: ${csvFilePath}`);
     }
 
-    // Check if data already exists
+    // Clear existing data if any
     const existingCount = await Sales.countDocuments();
     if (existingCount > 0) {
-      console.log(`⚠️  Found ${existingCount} existing records.`);
+      console.log(`⚠️ Found ${existingCount} existing records.`);
       console.log('🗑️  Clearing old data...');
       await Sales.deleteMany({});
       console.log('✅ Old data cleared.\n');
@@ -33,6 +33,15 @@ export const loadCSVToDatabase = async (csvFilePath) => {
         .pipe(csv())
         .on('data', async (row) => {
           try {
+            // Safe date parsing
+            let date = null;
+            if (row['Date']) {
+              const d = new Date(row['Date']);
+              if (!isNaN(d.getTime())) {
+                date = d;
+              }
+            }
+
             batch.push({
               customerId: row['Customer ID'],
               customerName: row['Customer Name'],
@@ -51,14 +60,14 @@ export const loadCSVToDatabase = async (csvFilePath) => {
               discountPercentage: parseFloat(row['Discount Percentage']) || 0,
               totalAmount: parseFloat(row['Total Amount']) || 0,
               finalAmount: parseFloat(row['Final Amount']) || 0,
-              date: new Date(row['Date']),
+              date,
               paymentMethod: row['Payment Method'],
               orderStatus: row['Order Status'],
               deliveryType: row['Delivery Type'],
               storeId: row['Store ID'],
               storeLocation: row['Store Location'],
               salespersonId: row['Salesperson ID'],
-              employeeName: row['Employee Name']
+              employeeName: row['Employee Name'],
             });
 
             // Insert in batches
@@ -74,7 +83,7 @@ export const loadCSVToDatabase = async (csvFilePath) => {
                 batch = [];
               }
             }
-          } catch (err) {
+          } catch {
             errorCount++;
           }
         })
@@ -85,11 +94,11 @@ export const loadCSVToDatabase = async (csvFilePath) => {
               await Sales.insertMany(batch);
               totalImported += batch.length;
             }
-            
+
             if (errorCount > 0) {
-              console.log(`⚠️  Errors encountered: ${errorCount}`);
+              console.log(`⚠️ Errors encountered: ${errorCount}`);
             }
-            
+
             resolve(totalImported);
           } catch (err) {
             reject(err);

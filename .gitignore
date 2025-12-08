@@ -28,4 +28,3 @@ Thumbs.db
 
 # Backend data files (large CSV, not in Git)
 backend/data/*.csv
-*.csv
