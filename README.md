@@ -70,3 +70,12 @@ Server-side pagination with 10 items per page:
 MONGODB_URI="your MongoDB Atlas connection string (truestate_db)"
 PORT=5000
 NODE_ENV=development
+
+
+## Live Demo
+
+- **Frontend (Vercel):**  
+  https://truestate-frontend.vercel.app
+
+- **Backend API (Vercel):**  
+  https://truestate-backend.vercel.app/api/sales
