@@ -31,7 +31,6 @@ const salesSchema = new mongoose.Schema({
   collection: 'sales'
 });
 
-// Indexes for better query performance
 salesSchema.index({ customerName: 'text', phoneNumber: 'text' });
 salesSchema.index({ date: -1, customerRegion: 1 });
 

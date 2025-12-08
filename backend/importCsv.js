@@ -2,13 +2,11 @@ import mongoose from "mongoose";
 import fs from "fs";
 import csv from "csv-parser";
 
-// 1) Atlas connection string
 const uri = "mongodb+srv://truestate_user:Abhisraj099@cluster0.wzmgnld.mongodb.net/truestate_db";
 
-// 2) Mongoose schema (adjust field names to your CSV headers)
 const salesSchema = new mongoose.Schema(
   { },
-  { strict: false } // accept any columns
+  { strict: false }
 );
 
 const Sale = mongoose.model("Sale", salesSchema);
@@ -22,7 +20,7 @@ async function run() {
   fs.createReadStream("./data/sales_data.csv")
     .pipe(csv())
     .on("data", (row) => {
-      results.push(row);        // each row is an object from CSV
+      results.push(row);
     })
     .on("end", async () => {
       console.log("CSV parsed, inserting", results.length, "rows...");

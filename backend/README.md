@@ -1,6 +1,6 @@
 # Backend – TruEstate Sales Management System
 
-REST API for sales data management with server-side filtering, search, sorting, and pagination.
+REST API for sales data management with server-side filtering, search, sorting, analytics, and pagination.
 
 ## API Endpoints
 
@@ -15,12 +15,11 @@ Fetch sales data with optional query parameters.
 - `gender` – Comma-separated genders
 - `category` – Comma-separated product categories
 - `paymentMethod` – Comma-separated payment methods
-- `ageMin`, `ageMax` – Age range
-- `dateFrom`, `dateTo` – Date range (YYYY-MM-DD)
-- `sortBy` – `date` | `quantity` | `customerName`
-- `sortOrder` – `asc` | `desc` (date defaults to `desc`)
+- `minAge`, `maxAge` – Age range
+- `startDate`, `endDate` – Date range (YYYY-MM-DD)
+- `sortBy` – `date` | `quantity` | `name` (customer name)
 - `page` – Page number (default: 1)
-- `pageSize` – Items per page (default: 10)
+- `limit` – Items per page (default: 10)
 
 **Response shape:**
 
@@ -28,14 +27,15 @@ Fetch sales data with optional query parameters.
 "data": [...],
 "pagination": {
 "currentPage": 1,
-"totalPages": 96,
-"totalItems": 954,
+"totalPages": 500,
+"totalItems": 5000,
 "itemsPerPage": 10
 }
 }
 
 
-### GET `/api/sales/filters`
+
+### GET `/api/filters`
 
 Returns available filter options (regions, genders, categories, tags, payment methods).
 
@@ -49,34 +49,45 @@ Returns available filter options (regions, genders, categories, tags, payment me
 }
 
 
+### GET `/api/analytics/region`
+
+Returns regional analytics (total revenue, order count, average order value) grouped by customer region.
+
+### GET `/api/analytics/category`
+
+Returns category analytics (total sales, total quantity, average price) grouped by product category.
+
 ## Setup
 
 Server runs on port **5000** by default.
-
-
-
-## Setup
-
-Server runs on port **5000** by default.
-
 
 cd backend
 npm install
-node scripts/generateSample.js # generate sample dataset (5K rows)
 npm run dev # http://localhost:5000
+
+
+Environment variables (`backend/.env`):
+
+MONGODB_URI="your MongoDB Atlas connection string for truestate_db"
+PORT=5000
+NODE_ENV=development
 
 
 ## Dataset Setup
 
-The assignment dataset is large, so the deployed version uses a representative sample CSV with the same schema.
+The assignment dataset is stored in **MongoDB Atlas** (database `truestate_db`, collection `sales`) with ~5,000 records.
+
+A CSV with the same schema is kept locally for development:
 
 - Sample file: `backend/data/sales_data.csv`
-- Generated locally using: `backend/scripts/generateSample.js`
-- Rows: 5,000 synthetic records covering all required fields
+- Loader script imports it into the `sales` collection in Atlas.
 
-If you want to regenerate the dataset:
+To (re)load the dataset during development:
+
 
 cd backend
-node scripts/generateSample.js
+node scripts/loadData.js # reads backend/data/sales_data.csv and populates MongoDB
 
-The backend will not return data unless `backend/data/sales_data.csv` exists.
+
+The backend will not return data until the `sales` collection in Atlas has been populated from `backend/data/sales_data.csv` or another valid source.
+

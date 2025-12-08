@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
-// Load environment variables from .env in local dev
 dotenv.config();
 
 const connectDB = async () => {
@@ -11,14 +10,14 @@ const connectDB = async () => {
     }
 
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 10000, // 10s timeout instead of 30s default [web:45][web:55]
+      serverSelectionTimeoutMS: 10000,
     });
 
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-    console.log(`📊 Database: ${conn.connection.name}`);
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`Database: ${conn.connection.name}`);
     return conn;
   } catch (error) {
-    console.error('❌ MongoDB Connection Error:', error.message);
+    console.error('MongoDB Connection Error:', error.message);
     throw error;
   }
 };

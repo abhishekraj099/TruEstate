@@ -8,10 +8,8 @@ export const searchAndFilterSales = async (query) => {
   try {
     const { search, page = 1, limit = 10, sortBy, ...filters } = query;
 
-    // Build MongoDB query
     const dbQuery = {};
 
-    // Search functionality (works only if you later migrate to camelCase fields)
     if (search) {
       dbQuery.$or = [
         { customerName: { $regex: search, $options: 'i' } },
@@ -19,65 +17,57 @@ export const searchAndFilterSales = async (query) => {
       ];
     }
 
-    // Region filter
     if (filters.region) {
       const regions = Array.isArray(filters.region)
         ? filters.region
         : [filters.region];
-      dbQuery['Customer Region'] = { $in: regions };
+      dbQuery.customerRegion = { $in: regions };
     }
 
-    // Gender filter
     if (filters.gender) {
       const genders = Array.isArray(filters.gender)
         ? filters.gender
         : [filters.gender];
-      dbQuery['Gender'] = { $in: genders };
+      dbQuery.gender = { $in: genders };
     }
 
-    // Category filter
     if (filters.category) {
       const categories = Array.isArray(filters.category)
         ? filters.category
         : [filters.category];
-      dbQuery['Product Category'] = { $in: categories };
+      dbQuery.productCategory = { $in: categories };
     }
 
-    // Payment method filter
     if (filters.paymentMethod) {
       const methods = Array.isArray(filters.paymentMethod)
         ? filters.paymentMethod
         : [filters.paymentMethod];
-      dbQuery['Payment Method'] = { $in: methods };
+      dbQuery.paymentMethod = { $in: methods };
     }
 
-    // Age range filter
     if (filters.minAge || filters.maxAge) {
-      dbQuery['Age'] = {};
-      if (filters.minAge) dbQuery['Age'].$gte = parseInt(filters.minAge);
-      if (filters.maxAge) dbQuery['Age'].$lte = parseInt(filters.maxAge);
+      dbQuery.age = {};
+      if (filters.minAge) dbQuery.age.$gte = parseInt(filters.minAge);
+      if (filters.maxAge) dbQuery.age.$lte = parseInt(filters.maxAge);
     }
 
-    // Date range filter
     if (filters.startDate || filters.endDate) {
-      dbQuery['Date'] = {};
-      if (filters.startDate) dbQuery['Date'].$gte = new Date(filters.startDate);
-      if (filters.endDate) dbQuery['Date'].$lte = new Date(filters.endDate);
+      dbQuery.date = {};
+      if (filters.startDate) dbQuery.date.$gte = new Date(filters.startDate);
+      if (filters.endDate) dbQuery.date.$lte = new Date(filters.endDate);
     }
 
-    // Build sort options (on CSV field names)
     let sortOptions = {};
     if (sortBy === 'date') {
-      sortOptions = { Date: -1 };
+      sortOptions = { date: -1 };
     } else if (sortBy === 'quantity') {
-      sortOptions = { Quantity: -1 };
+      sortOptions = { quantity: -1 };
     } else if (sortBy === 'name') {
-      sortOptions = { 'Customer Name': 1 };
+      sortOptions = { customerName: 1 };
     } else {
-      sortOptions = { Date: -1 }; // Default sort
+      sortOptions = { date: -1 };
     }
 
-    // Execute query with pagination
     const totalItems = await Sales.countDocuments(dbQuery);
     const totalPages = Math.ceil(totalItems / limit);
     const skip = (page - 1) * limit;
@@ -88,37 +78,8 @@ export const searchAndFilterSales = async (query) => {
       .limit(parseInt(limit))
       .lean();
 
-    // Just pass through the fields that already exist in MongoDB
-    const transformedData = data.map((item) => ({
-      'Customer ID': item['Customer ID'],
-      'Customer Name': item['Customer Name'],
-      'Phone Number': item['Phone Number'],
-      'Gender': item['Gender'],
-      'Age': item['Age'],
-      'Customer Region': item['Customer Region'],
-      'Customer Type': item['Customer Type'],
-      'Product ID': item['Product ID'],
-      'Product Name': item['Product Name'],
-      'Brand': item['Brand'],
-      'Product Category': item['Product Category'],
-      'Tags': item['Tags'],
-      'Quantity': item['Quantity'],
-      'Price per Unit': item['Price per Unit'],
-      'Discount Percentage': item['Discount Percentage'],
-      'Total Amount': item['Total Amount'],
-      'Final Amount': item['Final Amount'],
-      'Date': item['Date'],
-      'Payment Method': item['Payment Method'],
-      'Order Status': item['Order Status'],
-      'Delivery Type': item['Delivery Type'],
-      'Store ID': item['Store ID'],
-      'Store Location': item['Store Location'],
-      'Salesperson ID': item['Salesperson ID'],
-      'Employee Name': item['Employee Name'],
-    }));
-
     return {
-      data: transformedData,
+      data,
       pagination: {
         currentPage: parseInt(page),
         totalPages,
@@ -135,11 +96,11 @@ export const getUniqueValues = async () => {
   try {
     const [regions, genders, categories, paymentMethods, tags] =
       await Promise.all([
-        Sales.distinct('Customer Region'),
-        Sales.distinct('Gender'),
-        Sales.distinct('Product Category'),
-        Sales.distinct('Payment Method'),
-        Sales.distinct('Tags'),
+        Sales.distinct('customerRegion'),
+        Sales.distinct('gender'),
+        Sales.distinct('productCategory'),
+        Sales.distinct('paymentMethod'),
+        Sales.distinct('tags'),
       ]);
 
     const uniqueTags = [...new Set(
@@ -163,10 +124,10 @@ export const getSalesAnalytics = async () => {
     const analytics = await Sales.aggregate([
       {
         $group: {
-          _id: '$Customer Region',
-          totalRevenue: { $sum: '$Final Amount' },
+          _id: '$customerRegion',
+          totalRevenue: { $sum: '$finalAmount' },
           orderCount: { $sum: 1 },
-          avgOrderValue: { $avg: '$Final Amount' },
+          avgOrderValue: { $avg: '$finalAmount' },
         },
       },
       { $sort: { totalRevenue: -1 } },
@@ -183,10 +144,10 @@ export const getCategoryStats = async () => {
     const categoryStats = await Sales.aggregate([
       {
         $group: {
-          _id: '$Product Category',
-          totalSales: { $sum: '$Final Amount' },
-          totalQuantity: { $sum: '$Quantity' },
-          avgPrice: { $avg: '$Price per Unit' },
+          _id: '$productCategory',
+          totalSales: { $sum: '$finalAmount' },
+          totalQuantity: { $sum: '$quantity' },
+          avgPrice: { $avg: '$pricePerUnit' },
         },
       },
       { $sort: { totalSales: -1 } },

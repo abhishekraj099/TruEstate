@@ -7,21 +7,18 @@ const BATCH_SIZE = 1000;
 
 export const loadCSVToDatabase = async (csvFilePath) => {
   try {
-    // Connect to database (Atlas via MONGODB_URI)
     await connectDB();
 
-    // Check if file exists
     if (!fs.existsSync(csvFilePath)) {
-      throw new Error(`❌ CSV file not found at: ${csvFilePath}`);
+      throw new Error(`CSV file not found at: ${csvFilePath}`);
     }
 
-    // Clear existing data if any
     const existingCount = await Sales.countDocuments();
     if (existingCount > 0) {
-      console.log(`⚠️ Found ${existingCount} existing records.`);
-      console.log('🗑️  Clearing old data...');
+      console.log(`Found ${existingCount} existing records.`);
+      console.log('Clearing old data...');
       await Sales.deleteMany({});
-      console.log('✅ Old data cleared.\n');
+      console.log('Old data cleared.\n');
     }
 
     let batch = [];
@@ -33,7 +30,6 @@ export const loadCSVToDatabase = async (csvFilePath) => {
         .pipe(csv())
         .on('data', async (row) => {
           try {
-            // Safe date parsing
             let date = null;
             if (row['Date']) {
               const d = new Date(row['Date']);
@@ -70,15 +66,14 @@ export const loadCSVToDatabase = async (csvFilePath) => {
               employeeName: row['Employee Name'],
             });
 
-            // Insert in batches
             if (batch.length >= BATCH_SIZE) {
               try {
                 await Sales.insertMany(batch);
                 totalImported += batch.length;
-                console.log(`✅ Imported ${totalImported} records...`);
+                console.log(`Imported ${totalImported} records...`);
                 batch = [];
               } catch (err) {
-                console.error('❌ Batch insert error:', err.message);
+                console.error('Batch insert error:', err.message);
                 errorCount++;
                 batch = [];
               }
@@ -89,14 +84,13 @@ export const loadCSVToDatabase = async (csvFilePath) => {
         })
         .on('end', async () => {
           try {
-            // Insert remaining records
             if (batch.length > 0) {
               await Sales.insertMany(batch);
               totalImported += batch.length;
             }
 
             if (errorCount > 0) {
-              console.log(`⚠️ Errors encountered: ${errorCount}`);
+              console.log(`Errors encountered: ${errorCount}`);
             }
 
             resolve(totalImported);

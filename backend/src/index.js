@@ -17,7 +17,7 @@ app.get('/', (req, res) => {
   res.json({ message: 'TruEstate Sales API is running' });
 });
 
-// connect DB first, then start server
+
 const startServer = async () => {
   try {
     await connectDB();

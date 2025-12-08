@@ -1,10 +1,10 @@
 # TruEstate Sales Management System
 
-A full-stack sales management system with advanced search, filtering, sorting, and pagination capabilities built for managing retail sales data.
+A full-stack sales management system with advanced search, filtering, sorting, analytics, and pagination capabilities built for managing retail sales data.
 
 ## Overview
 
-This application provides a comprehensive interface for viewing and analyzing sales transactions with real-time filtering, multi-criteria search, and efficient data pagination. It uses a React + Vite frontend and a Node.js + Express backend that operate on a CSV-based sample dataset loaded into memory.
+This application provides a comprehensive interface for viewing and analyzing sales transactions with real-time filtering, multi-criteria search, and efficient server-side pagination. The frontend is built with React + Vite and the backend uses Node.js + Express with MongoDB Atlas as the data store (data loaded from a CSV into the `sales` collection).
 
 ## Tech Stack
 
@@ -17,8 +17,10 @@ This application provides a comprehensive interface for viewing and analyzing sa
 **Backend:**
 - Node.js
 - Express.js
-- csv-parser (data processing)
-- CORS & dotenv
+- MongoDB Atlas (cloud database)
+- Mongoose (ODM)
+- csv-parser (CSV → MongoDB loader)
+- CORS & dotenv (API access + configuration)
 
 ## Search Implementation
 
@@ -39,9 +41,9 @@ All filters can be combined, and their state is preserved when changing search o
 ## Sorting Implementation
 
 Available sorting options:
-- **Date (Newest First)** – date descending
-- **Quantity** – quantity descending
-- **Customer Name (A–Z)** – alphabetical by customer name
+- **Date (Newest First)** – date descending  
+- **Quantity** – quantity descending  
+- **Customer Name (A–Z)** – alphabetical by customer name  
 
 Sorting respects the current search query and filters.
 
@@ -59,67 +61,12 @@ Server-side pagination with 10 items per page:
 
 - Node.js (v18 or higher)
 - npm
+- MongoDB Atlas cluster and connection string
 
 ### Backend Setup
 
-cd backend
-npm install
-node scripts/generateSample.js # generate sample sales_data.csv (5K rows)
-npm run dev # runs at http://localhost:5000
+1. Create `backend/.env`:
 
-
-### Frontend Setup
-
-Create `.env` inside `frontend`:
-
-
-VITE_API_URL=http://localhost:5000/api
-
-
-
-Then:
-
-cd frontend
-npm install
-npm run dev # runs at http://localhost:5173
-
-
-### Full Application (Local)
-
-1. Start the backend on port 5000.
-2. Start the frontend on port 5173.
-3. Open `http://localhost:5173` in the browser.
-
-## Project Structure
-
-
-truestate-sales-system/
-├── backend/
-│ ├── src/
-│ │ ├── controllers/
-│ │ ├── services/
-│ │ ├── routes/
-│ │ ├── utils/
-│ │ └── index.js
-│ ├── data/
-│ │ └── sales_data.csv
-│ └── scripts/
-│ └── generateSample.js
-├── frontend/
-│ ├── src/
-│ │ ├── components/
-│ │ ├── services/
-│ │ ├── styles/
-│ │ ├── App.jsx
-│ │ └── main.jsx
-│ ├── index.html
-│ └── vite.config.js
-└── docs/
-└── architecture.md
-
-
-
-## Live Demo
-
-- Frontend: `https://truestate-frontend.vercel.app`
-- Backend API: `https://truestate-backend.vercel.app/api/sales`
+MONGODB_URI="your MongoDB Atlas connection string (truestate_db)"
+PORT=5000
+NODE_ENV=development

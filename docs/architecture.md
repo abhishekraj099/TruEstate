@@ -3,14 +3,14 @@
 ## Backend Architecture
 
 ### Overview
-The backend follows a **layered MVC architecture** with clear separation of concerns across routes, controllers, services, and utilities.
+The backend follows a **layered MVC architecture** with clear separation of concerns across routes, controllers, services, models, and utilities.
 
 ### Architecture Layers
 
 **1. Routes Layer** (`src/routes/`)
 - Defines API endpoints and HTTP methods
 - Maps requests to appropriate controllers
-- Handles initial data loading on server startup
+- Mounts routes under `/api` prefix
 
 **2. Controllers Layer** (`src/controllers/`)
 - Receives HTTP requests from routes
@@ -22,13 +22,19 @@ The backend follows a **layered MVC architecture** with clear separation of conc
 **3. Services Layer** (`src/services/`)
 - Contains core business logic
 - Implements search, filter, sort, and pagination algorithms
+- Performs MongoDB queries and aggregations
 - Processes data transformations
 - Returns structured data to controllers
 
-**4. Utils Layer** (`src/utils/`)
-- CSV data loading and parsing
-- Data caching in memory for fast access
-- Helper functions and utilities
+**4. Models Layer** (`src/models/`)
+- Defines Mongoose schemas for MongoDB collections
+- Enforces data validation and indexing
+- Provides abstraction over database operations
+
+**5. Utils Layer** (`src/utils/`)
+- CSV data loading and parsing (for initial import)
+- Data transformation helpers
+- Connection management utilities
 
 ### Data Flow (Backend)
 
@@ -40,9 +46,11 @@ Controllers (salesController.js)
 ↓
 Services (salesService.js)
 ↓
-Utils (dataLoader.js - in-memory data)
+Models (Sales.js - Mongoose)
 ↓
-Services (process & filter data)
+MongoDB Atlas (truestate_db.sales)
+↓
+Services (process & transform data)
 ↓
 Controllers (format response)
 ↓
@@ -52,20 +60,26 @@ Client Response (JSON)
 
 ### Key Design Decisions
 
-**1. In-Memory Data Storage**
-- CSV data loaded once at startup
-- Stored in memory for fast query performance
-- Trade-off: Memory usage vs. speed (acceptable for 1M records)
+**1. MongoDB Atlas Storage**
+- Data stored in cloud-hosted MongoDB Atlas
+- Indexed fields for fast query performance (region, category, date, payment method, etc.)
+- Trade-off: Network latency vs. persistent storage and scalability
 
 **2. Server-Side Processing**
 - All filtering, sorting, and pagination done on server
 - Reduces client-side load
 - Ensures consistent behavior across clients
+- Leverages MongoDB aggregation pipelines for analytics
 
 **3. Stateless API**
 - Each request is independent
 - No session management required
 - Easy to scale horizontally
+
+**4. CSV Loader Utility**
+- One-time data import from CSV to MongoDB
+- Converts CSV rows into properly typed MongoDB documents
+- Safe date and number parsing during import
 
 ---
 
@@ -85,7 +99,7 @@ The frontend uses **React with functional components and hooks** for state manag
 **2. Presentational Components** (`components/`)
 - **SearchBar**: User input for search queries
 - **FilterPanel**: Multi-select filters with state management
-- **SalesTable**: Data display with formatted columns
+- **SalesTable**: Data display with formatted columns (currency, dates, status)
 - **SortDropdown**: Sorting option selector
 - **Pagination**: Page navigation controls
 
@@ -109,7 +123,7 @@ Update Local State (useState)
 ↓
 Trigger Effect (useEffect)
 ↓
-API Service Call
+API Service Call (Axios)
 ↓
 Backend API
 ↓
@@ -124,12 +138,12 @@ Re-render UI
 
 **Local Component State:**
 - Search term
-- Active filters object
+- Active filters object (region, gender, category, payment method, age range, date range)
 - Current sort option
 - Current page number
 - Loading status
 - Sales data array
-- Filter options
+- Filter options (regions, genders, categories, payment methods, tags)
 
 **State Update Flow:**
 1. User interacts with UI (search, filter, sort, paginate)
@@ -145,50 +159,50 @@ Re-render UI
 
 ### Request Flow
 User Action (Frontend)
-
+↓
 Click filter, type search, change sort, click page
-
+↓
 State Update (React)
-
+↓
 Local state updated via useState
-
+↓
 API Call (Axios)
-
+↓
 GET /api/sales?search=john&gender=Male&sortBy=date&page=1
-
+↓
 Backend Processing
-
+↓
 Route receives request
-
+↓
 Controller extracts parameters
-
-Service filters data from memory
-
-Service applies search logic
-
-Service sorts results
-
-Service paginates (slice array)
-
+↓
+Service builds MongoDB query with filters
+↓
+Service applies search logic (regex on name/phone)
+↓
+Service sorts results (MongoDB sort)
+↓
+Service paginates (skip + limit)
+↓
 Controller formats response
-
+↓
 Response (JSON)
 {
-data: [...10 items],
-pagination: {
-currentPage: 1,
-totalPages: 100,
-totalItems: 1000,
-itemsPerPage: 10
+"data": [...10 items],
+"pagination": {
+"currentPage": 1,
+"totalPages": 500,
+"totalItems": 5000,
+"itemsPerPage": 10
 }
 }
-
+↓
 Frontend Update
-
+↓
 Update salesData state
-
+↓
 Update pagination state
-
+↓
 Re-render components
 
 
@@ -198,25 +212,33 @@ Re-render components
 ## Folder Structure
 
 ### Backend
+
 backend/
 ├── src/
 │ ├── controllers/
 │ │ └── salesController.js # Request handlers
 │ ├── services/
 │ │ └── salesService.js # Business logic
+│ ├── models/
+│ │ └── Sales.js # Mongoose schema
 │ ├── routes/
 │ │ └── salesRoutes.js # API endpoints
+│ ├── config/
+│ │ └── db.config.js # MongoDB connection
 │ ├── utils/
-│ │ └── dataLoader.js # CSV parser & data cache
+│ │ └── dataLoader.js # CSV → MongoDB loader
 │ └── index.js # Server entry point
 ├── data/
-│ └── sales_data.csv # Source data
+│ └── sales_data.csv # Source data (for import)
+├── scripts/
+│ └── loadData.js # CSV import script
 ├── package.json
 └── README.md
 
 
-
 ### Frontend
+
+
 frontend/
 ├── src/
 │ ├── components/
@@ -226,7 +248,7 @@ frontend/
 │ │ ├── SortDropdown.jsx # Sort selector
 │ │ └── Pagination.jsx # Page navigation
 │ ├── services/
-│ │ └── api.js # API client
+│ │ └── api.js # API client (Axios)
 │ ├── styles/
 │ │ └── App.css # Global styles
 │ ├── App.jsx # Root component
@@ -236,7 +258,6 @@ frontend/
 ├── vite.config.js # Build config
 ├── package.json
 └── README.md
-
 
 
 ---
@@ -249,30 +270,46 @@ frontend/
 - Initialize Express app
 - Configure middleware (CORS, JSON parser)
 - Register routes
+- Connect to MongoDB Atlas
 - Start HTTP server
+
+**db.config.js**
+- Mongoose connection setup
+- Connection string from environment variable
+- Error handling and logging
 
 **salesRoutes.js**
 - Define `/api/sales` GET endpoint
-- Define `/api/sales/filters` GET endpoint
-- Load CSV data on startup
+- Define `/api/filters` GET endpoint
+- Define `/api/analytics/region` and `/api/analytics/category` endpoints
 - Route requests to controllers
 
 **salesController.js**
 - `getSales()`: Handle sales data requests
 - `getFilters()`: Return available filter options
+- `getAnalytics()`: Return regional analytics
+- `getCategoryAnalytics()`: Return category analytics
 - Error handling and response formatting
 
 **salesService.js**
 - `searchAndFilterSales()`: Main data processing function
-  - Search logic
-  - Filter logic (multi-criteria)
-  - Sort logic
-  - Pagination logic
-- `getUniqueValues()`: Extract distinct filter values
+  - Build MongoDB query from filters
+  - Search logic (regex on customerName/phoneNumber)
+  - Sort logic (MongoDB sort options)
+  - Pagination logic (skip + limit)
+- `getUniqueValues()`: Extract distinct filter values using `distinct()`
+- `getSalesAnalytics()`: Aggregation by customer region
+- `getCategoryStats()`: Aggregation by product category
+
+**Sales.js (Model)**
+- Mongoose schema definition for sales documents
+- Field types, indexes, and validation rules
+- Collection name mapping (`sales`)
 
 **dataLoader.js**
-- `loadSalesData()`: Parse CSV and cache in memory
-- `getSalesData()`: Retrieve cached data
+- `loadCSVToDatabase()`: Parse CSV and insert into MongoDB
+- Safe parsing of dates and numeric fields
+- Batch insertion for performance
 
 ### Frontend Modules
 
@@ -291,7 +328,7 @@ frontend/
 - Emit search events to parent
 
 **FilterPanel.jsx**
-- Display filter options
+- Display filter options (dropdowns, inputs, date pickers)
 - Manage local filter state
 - Emit filter changes to parent
 
@@ -301,11 +338,11 @@ frontend/
 - Handle empty states
 
 **SortDropdown.jsx**
-- Display sort options
+- Display sort options (date, quantity, name)
 - Emit sort selection to parent
 
 **Pagination.jsx**
-- Display page controls
+- Display page controls (Previous/Next)
 - Handle page navigation
 - Disable buttons at boundaries
 
@@ -320,10 +357,10 @@ frontend/
 ## Performance Considerations
 
 **Backend:**
-- In-memory data storage for O(1) access
-- Efficient filtering using Array methods
-- Pagination reduces response size
-- Single CSV load at startup
+- MongoDB Atlas with indexed fields for fast queries (region, category, date, payment method, etc.)
+- Efficient filtering using MongoDB query operators
+- Pagination reduces response size (skip + limit)
+- Aggregation pipelines for analytics
 
 **Frontend:**
 - Debounced search to reduce API calls
@@ -336,12 +373,16 @@ frontend/
 ## Scalability Notes
 
 **Current Implementation:**
-- Suitable for datasets up to 10M records in memory
-- Single-server deployment
+- Suitable for datasets from thousands to millions of records
+- MongoDB Atlas cluster (can scale vertically and horizontally)
+- Vercel serverless functions for backend (auto-scaling)
 
-**Future Enhancements:**
-- Database integration (PostgreSQL/MongoDB)
-- Redis caching layer
-- Load balancing for multiple backend instances
-- WebSocket for real-time updates
-- Server-side rendering (SSR) for SEO
+## Live Demo
+
+- **Frontend (Vercel):**  
+  https://truestate-frontend.vercel.app
+
+- **Backend API (Vercel):**  
+  https://truestate-backend.vercel.app/api/sales
+
+
